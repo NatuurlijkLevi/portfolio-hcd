@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
-body {
-  height: 500vh;
+body
+{
+  /* height: 500vh; */
+  height: 100vh;
 }
