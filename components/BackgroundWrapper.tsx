@@ -5,5 +5,5 @@ export default function BackgroundWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="h-full w-full fixed z-[-1]">{children}</div>;
+  return <div className="fixed inset-0 z-[-1]">{children}</div>;
 }
