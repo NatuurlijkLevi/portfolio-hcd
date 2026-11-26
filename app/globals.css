@@ -1,7 +1,11 @@
 @import "tailwindcss";
 
-body
+@layer base
 {
-  height: 500vh;
-  /* height: 100vh; */
+  body
+  {
+    height: 500vh;
+    background: url('/space.jpg') no-repeat center center fixed;
+    /* height: 100vh; */
+  }
 }

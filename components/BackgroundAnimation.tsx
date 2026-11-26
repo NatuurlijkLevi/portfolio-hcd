@@ -7,17 +7,12 @@ import BackgroundWrapper from "./BackgroundWrapper";
 import { degreeToRadian } from "./degreeToRadianTools";
 import ScrollListener from "./ScrollListener";
 import ScrollMotion from "./ScrollMotion";
-
+import HtmlPlane from "./HtmlPlane";
+import { montserratSubrayada } from "@/app/fonts/montserrat";
+import NextImage from "next/image";
+import { lobster } from "@/app/fonts/lobster";
 type Vec3 = [number, number, number];
 type Vec2 = [number, number];
-
-// Knob positions in world units, measured from the amp after its -90° Y turn.
-const KNOBS: { label: string; position: Vec3 }[] = [
-  { label: "VOLUME", position: [0.11, 5.84, 1.04] },
-  { label: "GAIN", position: [0.45, 5.84, 1.04] },
-  { label: "TONE", position: [0.78, 5.84, 1.04] },
-  { label: "MASTER", position: [1.125, 5.84, 1.04] },
-];
 
 // The panel surface below the knobs is at z = 1.0 (raycast from the amp mesh).
 // A tiny offset keeps the text from z-fighting with the panel.
@@ -116,10 +111,27 @@ function PortfolioAmp({
   );
 }
 
+function PortfolioPrinter()
+{
+  const { scene } = useGLTF("/3d/portfolio-printer2.glb");
+
+  return (
+    <primitive object={scene}></primitive>
+  );
+}
+
+function PortfolioComputer()
+{
+  const { scene } = useGLTF("/3d/portfolio-computer.glb");
+
+  return (
+    <primitive object={scene}></primitive>
+  );
+}
+
 export default function BackgroundAnimation({
   modelPosition = [0, 0, 0],
-  screenOffset = [0, 0],
-  onKnobClick,
+  screenOffset = [0, 0]
 }: {
   /** World-space position of the model. */
   modelPosition?: Vec3;
@@ -128,7 +140,6 @@ export default function BackgroundAnimation({
   onKnobClick?: (label: string, index: number) => void;
 })
 {
-  const [activeKnob, setActiveKnob] = useState<number | null>(null);
   const scrollProgress = useRef(0);
 
   useEffect(() =>
@@ -144,6 +155,8 @@ export default function BackgroundAnimation({
       <ScrollListener scrollProgress={scrollProgress}>
         <Canvas
           camera={{ position: [0, 0, 5], fov: 50, near: 0.1, far: 100000 }}
+          // gl={{ alpha: true }}
+          // onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
           style={{ width: "100%", height: "100%" }}
         >
           <Suspense fallback={null}>
@@ -154,7 +167,8 @@ export default function BackgroundAnimation({
               scrollProgress={scrollProgress}
               keyframes={[
                 [0, [0, 0, 0], [0, 0, 0]],
-                [100, [0, -45, 0], [5, 1, -10]]
+                [10, [0, -45, 0], [5, 1, -10]],
+                [15, [0, -45, 0], [20, 1, -10]],
               ]}>
               <group position={modelPosition}>
                 <group rotation={[0, degreeToRadian(-90), 0]}>
@@ -163,57 +177,74 @@ export default function BackgroundAnimation({
                     screenOffset={screenOffset}
                   />
                 </group>
-                {KNOBS.map((knob, index) => (
-                  <group key={knob.label}>
-                    {/* Invisible hit area: the knobs are baked into the GLB mesh. */}
-                    <mesh
-                      position={knob.position}
-                      onClick={(event) =>
-                      {
-                        event.stopPropagation();
-                        setActiveKnob(index);
-                        onKnobClick?.(knob.label, index);
-                      }}
-                      onPointerOver={(event) =>
-                      {
-                        event.stopPropagation();
-                        document.body.style.cursor = "pointer";
-                      }}
-                      onPointerOut={() =>
-                      {
-                        document.body.style.cursor = "auto";
-                      }}
-                    >
-                      <sphereGeometry args={[0.14, 16, 16]} />
-                      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-                    </mesh>
-                    <Text
-                      position={[knob.position[0], knob.position[1] - 0.28, LABEL_SURFACE_Z]}
-                      fontSize={0.05}
-                      color={activeKnob === index ? "#ffd166" : "#ffffff"}
-                      anchorX="center"
-                      anchorY="middle"
-                      raycast={() => null}
-                    >
-                      {knob.label}
-                    </Text>
-                    {activeKnob === index && (
-                      <mesh
-                        position={[knob.position[0], knob.position[1], 1.096]}
-                        raycast={() => null}
-                      >
-                        <ringGeometry args={[0.16, 0.19, 32]} />
-                        <meshBasicMaterial
-                          color="#ffd166"
-                          transparent
-                          opacity={0.9}
-                          side={THREE.DoubleSide}
-                          depthWrite={false}
-                        />
-                      </mesh>
-                    )}
-                  </group>
-                ))}
+                <HtmlPlane
+                  position={[-1.8, 6, LABEL_SURFACE_Z]}
+                  width={3.6}
+                  height={0.5}
+                  pixelsPerUnit={200}
+                  renderPlane={false}
+                >
+                  <div
+                    className={"text-neutral-200 w-full h-full flex items-end justify-start text-2xl font-bold gap-52"}
+                  >
+                    <div className={"flex pt-2 flex-col items-start justify-between h-full"}>
+                      <NextImage className="grayscale" src="/logo.svg" alt="Logo" width={32} height={32}></NextImage>
+                      <span className={montserratSubrayada.className}>Portfolio</span>
+                    </div>
+                    <ul className="uppercase text-sm flex text-center gap-2 pb-1 *:w-16">
+                      <li>Tone</li>
+                      <li>Gain</li>
+                      <li>Volume</li>
+                      <li>Master</li>
+                    </ul>
+                  </div>
+                </HtmlPlane>
+                <HtmlPlane
+                  position={[-1.8, 5.5, LABEL_SURFACE_Z]}
+                  width={3.6}
+                  height={5.2}
+                  pixelsPerUnit={200}
+                  renderPlane={false}
+                >
+                  <div className={lobster.className + " text-neutral-200 h-full flex flex-col gap-20 *:text-2xl *:w-full *:flex *:items-center *:justify-center"}>
+                    <div className="h-86">
+                      <span>Levi Meijer</span>
+                    </div>
+                    <div className="h-full">
+                      <span>Levi Meijer</span>
+                    </div>
+                  </div>
+                </HtmlPlane>
+              </group>
+            </ScrollMotion>
+            <ScrollMotion
+              scrollProgress={scrollProgress}
+              keyframes={[
+                [0, [0, -45, 0], [20, 3.5, -15]],
+                [15, [0, -45, 0], [20, 3.5, -15]],
+                [20, [0, -45, 0], [-3, 3.5, -15]],
+                [30, [0, -45, 0], [-3, 3.5, -15]],
+                [35, [0, -45, 0], [20, 3.5, -15]],
+              ]}>
+              <group rotation={[0, degreeToRadian(-90), 0]}>
+                <PortfolioPrinter />
+              </group>
+            </ScrollMotion>
+            <ScrollMotion
+              scrollProgress={scrollProgress}
+              keyframes={[
+                [0, [0, -45, 0], [20, 4, -5]],
+                [35, [0, -45, 0], [20, 4, -5]],
+                [40, [0, -45, 0], [4, 4, -5]],
+                [50, [0, -45, 0], [4, 4, -5]],
+                [55, [0, 0, 0], [0, 4, -5]],
+                [60, [0, 0, 0], [0, 4, 2]],
+                [80, [0, 0, 0], [0, 4, 2]],
+                [85, [0, 0, 0], [0, 4, -1]],
+                [90, [0, 0, 0], [0, 10, -1]],
+              ]}>
+              <group rotation={[0, degreeToRadian(-90), 0]}>
+                <PortfolioComputer />
               </group>
             </ScrollMotion>
           </Suspense>
